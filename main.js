@@ -94,6 +94,10 @@ async function listEnvironments(repo) {
 }
 
 function registerIpc() {
+  ipcMain.on('app:version', (event) => {
+    event.returnValue = app.getVersion();
+  });
+
   ipcMain.handle('repos:list', () => loadRepos());
 
   ipcMain.handle('repos:add', (_, repoInput) => {

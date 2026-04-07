@@ -4,9 +4,28 @@
   "description": "Desktop app to manage GitHub repository and environment variables via GitHub CLI",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.github-env-manager",
+    "productName": "GitHub Env Manager",
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Development"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "styles.css"
+    ]
   },
   "dependencies": {
     "electron": "^41.1.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^26.0.12"
   }
 }

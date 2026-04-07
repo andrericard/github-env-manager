@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+contextBridge.exposeInMainWorld('appVersion', ipcRenderer.sendSync('app:version'));
+
 contextBridge.exposeInMainWorld('api', {
   listRepos: () => ipcRenderer.invoke('repos:list'),
   addRepo: (repo) => ipcRenderer.invoke('repos:add', repo),

@@ -350,6 +350,7 @@ saveEnvSecretBtn.onclick = async () => {
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
+  $('appVersion').textContent = `v${window.appVersion}`;
   try {
     await refreshRepos();
   } catch (error) {
