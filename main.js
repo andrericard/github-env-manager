@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { execFile } = require('child_process');
+const { execFile, execSync } = require('child_process');
 
 const dataDir = app.getPath('userData');
 const reposFile = path.join(dataDir, 'repos.json');
@@ -26,17 +26,28 @@ function saveRepos(repos) {
 }
 
 function parseRepo(input) {
-  const cleaned = input.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/^\//, '');
-  const parts = cleaned.split('/');
-  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+  const trimmed = input.trim();
+  const parts = trimmed.split('/');
+  const owner = parts[parts.length - 2];
+  const repo = parts[parts.length - 1];
+  if (!owner || !repo) {
     throw new Error('Repository must be in owner/repo format');
   }
-  return `${parts[0]}/${parts[1]}`;
+  return `${owner}/${repo}`;
 }
+
+let shellPath;
+try {
+  shellPath = execSync('bash -lc "echo $PATH"', { encoding: 'utf-8' }).trim();
+} catch {
+  shellPath = process.env.PATH || '';
+}
+
+const ghEnv = { ...process.env, PATH: shellPath };
 
 function gh(args, stdinValue) {
   return new Promise((resolve, reject) => {
-    const child = execFile('gh', args, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+    const child = execFile('gh', args, { maxBuffer: 1024 * 1024 * 10, env: ghEnv }, (error, stdout, stderr) => {
       if (error) {
         reject(new Error(stderr || error.message));
         return;
@@ -50,22 +61,36 @@ function gh(args, stdinValue) {
   });
 }
 
+// --- Variables (CLI) ---
+
 async function listRepoVariables(repo) {
-  const output = await gh(['variable', 'list', '--repo', repo, '--json', 'name,value,visibility,updatedAt']);
+  const output = await gh(['variable', 'list', '--repo', repo, '--json', 'name,value']);
   return output ? JSON.parse(output) : [];
 }
 
-async function listEnvironmentVariables(repo, env) {
-  const pathValue = `repos/${repo}/environments/${encodeURIComponent(env)}/variables`;
-  const output = await gh(['api', pathValue]);
-  const parsed = JSON.parse(output || '{}');
-  return parsed.variables || [];
+async function listEnvVariables(repo, env) {
+  const output = await gh(['variable', 'list', '--repo', repo, '--env', env, '--json', 'name,value']);
+  return output ? JSON.parse(output) : [];
 }
 
+// --- Secrets (CLI) ---
+
+async function listRepoSecrets(repo) {
+  const output = await gh(['secret', 'list', '--repo', repo, '--json', 'name']);
+  return output ? JSON.parse(output) : [];
+}
+
+async function listEnvSecrets(repo, env) {
+  const output = await gh(['secret', 'list', '--repo', repo, '--env', env, '--json', 'name']);
+  return output ? JSON.parse(output) : [];
+}
+
+// --- Environments (API — gh CLI has no env command) ---
+
 async function listEnvironments(repo) {
-  const output = await gh(['api', `repos/${repo}/environments`]);
-  const parsed = JSON.parse(output || '{}');
-  return (parsed.environments || []).map((env) => env.name);
+  const output = await gh(['api', `repos/${repo}/environments`, '--jq', '.environments[].name']);
+  if (!output) return [];
+  return output.split('\n').filter(Boolean);
 }
 
 function registerIpc() {
@@ -87,10 +112,11 @@ function registerIpc() {
     return repos;
   });
 
+  // Repo variables
   ipcMain.handle('repo:variables:list', async (_, repo) => listRepoVariables(repo));
 
   ipcMain.handle('repo:variables:set', async (_, repo, name, value) => {
-    await gh(['variable', 'set', name, '--repo', repo], `${value}\n`);
+    await gh(['variable', 'set', name, '--repo', repo, '--body', value]);
     return listRepoVariables(repo);
   });
 
@@ -99,23 +125,46 @@ function registerIpc() {
     return listRepoVariables(repo);
   });
 
-  ipcMain.handle('env:list', async (_, repo) => listEnvironments(repo));
+  // Repo secrets
+  ipcMain.handle('repo:secrets:list', async (_, repo) => listRepoSecrets(repo));
 
-  ipcMain.handle('env:create', async (_, repo, envName) => {
-    await gh(['api', '-X', 'PUT', `repos/${repo}/environments/${encodeURIComponent(envName)}`]);
-    return listEnvironments(repo);
+  ipcMain.handle('repo:secrets:set', async (_, repo, name, value) => {
+    await gh(['secret', 'set', name, '--repo', repo, '--body', value]);
+    return listRepoSecrets(repo);
   });
 
-  ipcMain.handle('env:variables:list', async (_, repo, envName) => listEnvironmentVariables(repo, envName));
+  ipcMain.handle('repo:secrets:delete', async (_, repo, name) => {
+    await gh(['secret', 'delete', name, '--repo', repo]);
+    return listRepoSecrets(repo);
+  });
+
+  // Environments
+  ipcMain.handle('env:list', async (_, repo) => listEnvironments(repo));
+
+  // Env variables
+  ipcMain.handle('env:variables:list', async (_, repo, envName) => listEnvVariables(repo, envName));
 
   ipcMain.handle('env:variables:set', async (_, repo, envName, name, value) => {
-    await gh(['api', '-X', 'PATCH', `repos/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`, '-f', `name=${name}`, '-f', `value=${value}`]);
-    return listEnvironmentVariables(repo, envName);
+    await gh(['variable', 'set', name, '--repo', repo, '--env', envName, '--body', value]);
+    return listEnvVariables(repo, envName);
   });
 
   ipcMain.handle('env:variables:delete', async (_, repo, envName, name) => {
-    await gh(['api', '-X', 'DELETE', `repos/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`]);
-    return listEnvironmentVariables(repo, envName);
+    await gh(['variable', 'delete', name, '--repo', repo, '--env', envName, '--yes']);
+    return listEnvVariables(repo, envName);
+  });
+
+  // Env secrets
+  ipcMain.handle('env:secrets:list', async (_, repo, envName) => listEnvSecrets(repo, envName));
+
+  ipcMain.handle('env:secrets:set', async (_, repo, envName, name, value) => {
+    await gh(['secret', 'set', name, '--repo', repo, '--env', envName, '--body', value]);
+    return listEnvSecrets(repo, envName);
+  });
+
+  ipcMain.handle('env:secrets:delete', async (_, repo, envName, name) => {
+    await gh(['secret', 'delete', name, '--repo', repo, '--env', envName]);
+    return listEnvSecrets(repo, envName);
   });
 }
 

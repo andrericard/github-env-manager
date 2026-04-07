@@ -9,63 +9,87 @@
   <body>
     <header>
       <h1>GitHub Environment Manager</h1>
-      <p>Manage repository and environment variables using GitHub CLI.</p>
+      <p>Manage repository secrets and variables using GitHub CLI.</p>
     </header>
 
     <main>
       <section class="card">
         <h2>Repositories</h2>
         <div class="row">
-          <input id="repoInput" placeholder="owner/repo or GitHub URL" />
+          <input id="repoInput" placeholder="owner/repo" />
           <button id="addRepoBtn">Add Repository</button>
         </div>
         <ul id="repoList"></ul>
       </section>
 
-      <section class="card" id="repoSection">
-        <h2 id="repoTitle">Repository Variables</h2>
-        <div class="row">
-          <input id="repoVarName" placeholder="Variable name" />
-          <input id="repoVarValue" placeholder="Variable value" />
-          <button id="saveRepoVarBtn">Save Variable</button>
+      <section class="card">
+        <h2 id="repoTitle">Repository</h2>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="repoVars">Variables</button>
+          <button class="tab" data-tab="repoSecrets">Secrets</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Value</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="repoVarTable"></tbody>
-        </table>
+
+        <div id="repoVars" class="tab-content active">
+          <div class="row">
+            <input id="repoVarName" placeholder="Variable name" />
+            <input id="repoVarValue" placeholder="Variable value" />
+            <button id="saveRepoVarBtn">Save</button>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Value</th><th>Actions</th></tr></thead>
+            <tbody id="repoVarTable"></tbody>
+          </table>
+        </div>
+
+        <div id="repoSecrets" class="tab-content">
+          <div class="row">
+            <input id="repoSecretName" placeholder="Secret name" />
+            <input id="repoSecretValue" placeholder="Secret value" type="password" />
+            <button id="saveRepoSecretBtn">Save</button>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+            <tbody id="repoSecretTable"></tbody>
+          </table>
+        </div>
       </section>
 
-      <section class="card" id="envSection">
+      <section class="card">
         <h2>Environments</h2>
-        <div class="row">
-          <input id="envNameInput" placeholder="New environment name" />
-          <button id="addEnvBtn">Add Environment</button>
-        </div>
         <div class="columns">
           <ul id="envList"></ul>
           <div>
-            <h3 id="envTitle">Environment Variables</h3>
-            <div class="row">
-              <input id="envVarName" placeholder="Variable name" />
-              <input id="envVarValue" placeholder="Variable value" />
-              <button id="saveEnvVarBtn">Save Variable</button>
+            <h3 id="envTitle">Select an environment</h3>
+
+            <div class="tabs">
+              <button class="tab active" data-tab="envVars">Variables</button>
+              <button class="tab" data-tab="envSecrets">Secrets</button>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Value</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="envVarTable"></tbody>
-            </table>
+
+            <div id="envVars" class="tab-content active">
+              <div class="row">
+                <input id="envVarName" placeholder="Variable name" />
+                <input id="envVarValue" placeholder="Variable value" />
+                <button id="saveEnvVarBtn">Save</button>
+              </div>
+              <table>
+                <thead><tr><th>Name</th><th>Value</th><th>Actions</th></tr></thead>
+                <tbody id="envVarTable"></tbody>
+              </table>
+            </div>
+
+            <div id="envSecrets" class="tab-content">
+              <div class="row">
+                <input id="envSecretName" placeholder="Secret name" />
+                <input id="envSecretValue" placeholder="Secret value" type="password" />
+                <button id="saveEnvSecretBtn">Save</button>
+              </div>
+              <table>
+                <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+                <tbody id="envSecretTable"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
