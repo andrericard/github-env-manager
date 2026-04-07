@@ -25,10 +25,10 @@ jobs:
         run: |
           LAST=$(git tag --list 'v1.*' --sort=-v:refname | head -n1)
           if [ -z "$LAST" ]; then
-            NEXT="1.0"
+            NEXT="1.0.0"
           else
-            SEQ=${LAST#v1.}
-            NEXT="1.$((SEQ + 1))"
+            SEQ=$(echo "$LAST" | cut -d. -f2)
+            NEXT="1.$((SEQ + 1)).0"
           fi
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
 
