@@ -11,7 +11,7 @@
     "appId": "com.github-env-manager",
     "productName": "GitHub Env Manager",
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": ["tar.gz"],
       "category": "Development"
     },
     "files": [
