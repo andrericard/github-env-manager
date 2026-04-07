@@ -22,10 +22,9 @@
       "styles.css"
     ]
   },
-  "dependencies": {
-    "electron": "^41.1.1"
-  },
   "devDependencies": {
+    "electron": "^41.1.1",
     "electron-builder": "^26.0.12"
-  }
+  },
+  "author": "André Ricard"
 }

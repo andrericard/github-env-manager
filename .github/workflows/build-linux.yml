@@ -4,16 +4,36 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Get next version
+        id: version
+        run: |
+          LAST=$(git tag --list 'v1.*' --sort=-v:refname | head -n1)
+          if [ -z "$LAST" ]; then
+            NEXT="1.0"
+          else
+            SEQ=${LAST#v1.}
+            NEXT="1.$((SEQ + 1))"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Update package.json version
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
@@ -21,10 +41,11 @@ jobs:
       - name: Build Linux
         run: npm run build:linux
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create release
+        uses: softprops/action-gh-release@v2
         with:
-          name: github-env-manager-linux
-          path: |
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          files: |
             dist/*.AppImage
             dist/*.deb
