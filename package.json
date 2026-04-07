@@ -1,0 +1,15 @@
+{
+  "name": "github-env-manager",
+  "version": "1.0.1",
+  "description": "Desktop app to manage GitHub repository and environment variables via GitHub CLI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "electron": "^31.0.0"
+  }
+}

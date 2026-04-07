@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Env Manager</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>GitHub Environment Manager</h1>
+      <p>Manage repository and environment variables using GitHub CLI.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Repositories</h2>
+        <div class="row">
+          <input id="repoInput" placeholder="owner/repo or GitHub URL" />
+          <button id="addRepoBtn">Add Repository</button>
+        </div>
+        <ul id="repoList"></ul>
+      </section>
+
+      <section class="card" id="repoSection">
+        <h2 id="repoTitle">Repository Variables</h2>
+        <div class="row">
+          <input id="repoVarName" placeholder="Variable name" />
+          <input id="repoVarValue" placeholder="Variable value" />
+          <button id="saveRepoVarBtn">Save Variable</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="repoVarTable"></tbody>
+        </table>
+      </section>
+
+      <section class="card" id="envSection">
+        <h2>Environments</h2>
+        <div class="row">
+          <input id="envNameInput" placeholder="New environment name" />
+          <button id="addEnvBtn">Add Environment</button>
+        </div>
+        <div class="columns">
+          <ul id="envList"></ul>
+          <div>
+            <h3 id="envTitle">Environment Variables</h3>
+            <div class="row">
+              <input id="envVarName" placeholder="Variable name" />
+              <input id="envVarValue" placeholder="Variable value" />
+              <button id="saveEnvVarBtn">Save Variable</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="envVarTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="message"></div>
+    <script src="renderer.js"></script>
+  </body>
+</html>
